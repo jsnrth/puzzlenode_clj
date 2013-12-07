@@ -2,17 +2,20 @@
   (:require [clojure.test :refer :all]
             [international-trade.rates :as rates]))
 
+(defn c [[conversion rates]] conversion)
+
 (deftest returns-a-conversion-rate
-  (let [rates [{:from :FOO :to :BAR :conversion 1.23M}
-               {:from :BAR :to :BAZ :conversion 2.34M}]]
-    (is (= 1.23M (rates/rate rates :FOO :BAR)))
-    (is (= 2.34M (rates/rate rates :BAR :BAZ)))
-    (is (= :no-conversion (rates/rate rates :BAT :QUX)))))
+  (let [rates {[:FOO :BAR] 1.1M
+               [:BAR :BAZ] 1.2M}]
+    (is (= 1.1M (c (rates/conversion rates :FOO :BAR))))
+    (is (= 1.2M (c (rates/conversion rates :BAR :BAZ))))
+    (is (= :no-conversion (c (rates/conversion rates :BAT :QUX))))))
 
-(deftest returns-an-inverse-conversion-rate
-  (let [rates [{:from :FOO :to :BAR :conversion 1.23M}]]
-    (is (= 0.8130081300813008M (rates/rate rates :BAR :FOO)))))
+(deftest computes-inverse-conversion-rates
+  (let [rates {[:FOO :BAR] 1.23M}
+        [conversion new-rates] (rates/conversion rates :BAR :FOO)]
+    (is (= 0.8130081300813008M conversion))
+    (is (= conversion (get new-rates [:BAR :FOO])))))
 
-(deftest noop-when-converting-same-currency
-  (is (= 1.0M (rates/rate [] :FOO :FOO))))
-
+(deftest converts-same-currency
+  (is (= 1.0M (c (rates/conversion [] :FOO :FOO)))))
