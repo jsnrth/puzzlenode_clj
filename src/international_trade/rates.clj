@@ -1,6 +1,13 @@
 (ns international-trade.rates)
 
-(declare derive-rates collect-froms invert-rates inverted)
+(declare
+  derive-rates
+  collect-froms
+  new-rate?
+  from-reducer
+  to-reducer
+  invert-rates
+  inverted)
 
 (defn conversion
   ([rates from to]
@@ -22,30 +29,34 @@
   (let [inverted-rates (invert-rates rates)
         all-rates (merge rates inverted-rates)
         from-rates (collect-froms all-rates from)
-        dfn (fn [m ft c]
-              (let [[f t] ft
-                    to-rates (collect-froms all-rates t)
-                    dfn2 (fn [m2 ft2 c2]
-                      (let [[f2 t2] ft2]
-                        (cond
-                          (and (not (= f t2)) (not (contains? all-rates [f t2])))
-                            (assoc m2 [f t2] (bigdec (* c c2)))
-                          :else
-                            m2)))]
-                (if (not-empty to-rates)
-                  (reduce-kv dfn2 m to-rates)
-                  m)))
-        new-rates (reduce-kv dfn {} from-rates)]
+        new-rates (reduce-kv (from-reducer all-rates) {} from-rates)]
     (merge inverted-rates new-rates)))
 
 (defn- collect-froms [rates from]
   (let [collector
-          (fn [m r c]
-            (let [[f t] r]
-              (if (= f from)
-                (assoc m r c)
-                m)))]
+          (fn [new-rates [f t] c]
+            (if (= f from) (assoc new-rates [f t] c) new-rates))]
     (reduce-kv collector {} rates)))
+
+(defn- from-reducer [all-rates]
+  (fn [new-rates [from to] conversion]
+    (let [to-rates (collect-froms all-rates to)]
+      (if (not-empty to-rates)
+        (reduce-kv (to-reducer all-rates from conversion) new-rates to-rates)
+        new-rates))))
+
+(defn- to-reducer [all-rates cur-from cur-conversion]
+  (fn [new-rates [from to] conversion]
+    (cond
+      (new-rate? all-rates cur-from to)
+        (assoc new-rates [cur-from to] (bigdec (* cur-conversion conversion)))
+      :else
+        new-rates)))
+
+(defn- new-rate? [rates from to]
+  (and
+    (not (= from to))
+    (not (contains? rates [from to]))))
 
 (defn- invert-rates [rates]
   (let [merge-inverted
