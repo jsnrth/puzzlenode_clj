@@ -12,6 +12,9 @@
   (let [p 5 d 0.00001]
     (< (abs (- (with-precision p n1) (with-precision p n2)))) d))
 
+(defn stores [transactions]
+  (vec (map :store transactions)))
+
 (deftest converts-and-sums-a-list-of-transactions
   (let [transactions [{:store "Abc" :sku "SKU1" :amount 1.1M :currency :FOO}
                       {:store "Bcd" :sku "SKU1" :amount 1.2M :currency :BAR}
@@ -27,3 +30,11 @@
     (testing "gives up when cannot convert"
       (let [[amount _] (trans/sum rates transactions :QUX)]
         (is (= :no-conversion amount))))))
+
+(deftest filters-transactions-by-sku
+  (let [transactions [{:store "Abc" :sku "SKU1" :amount 1.1M :currency :FOO}
+                      {:store "Bcd" :sku "SKU2" :amount 1.2M :currency :BAR}
+                      {:store "Def" :sku "SKU1" :amount 1.3M :currency :BAZ}]]
+    (is (= ["Abc" "Def"] (stores (trans/sku "SKU1" transactions))))
+    (is (= ["Bcd"] (stores (trans/sku "SKU2" transactions))))
+    (is (= [] (stores (trans/sku "WAT" transactions))))))

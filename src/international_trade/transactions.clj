@@ -7,6 +7,9 @@
   (let [init [0.0M rates]]
     (reduce (sum-reducer rates transactions currency) init transactions)))
 
+(defn sku [sku transactions]
+  (filter #(= sku (:sku %)) transactions))
+
 (defn- sum-reducer [rates transactions currency]
   (fn [[total new-rates] transaction]
     (if (= :no-conversion total)
