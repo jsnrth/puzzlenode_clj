@@ -11,7 +11,7 @@
     (is (= 1.2M (c (rates/conversion rates :BAR :BAZ))))
     (is (= :no-conversion (c (rates/conversion rates :BAT :QUX))))))
 
-(deftest computes-inverse-conversion-rates
+(deftest derives-inverse-conversion-rates
   (let [rates {[:FOO :BAR] 1.23M}
         [conversion new-rates] (rates/conversion rates :BAR :FOO)]
     (is (= 0.8130081300813008M conversion))
@@ -19,3 +19,23 @@
 
 (deftest converts-same-currency
   (is (= 1.0M (c (rates/conversion [] :FOO :FOO)))))
+
+(deftest derives-missing-conversion-rates
+  (let [rates {[:FOO :BAR] 1.1M
+               [:BAR :BAZ] 1.2M
+               [:BAZ :QUX] 1.3M
+               [:BAT :QUX] 1.4M
+               [:AAA :BBB] 1.4M}]
+    (testing "derived through other rates"
+      (let [[conv new-rates] (rates/conversion rates :FOO :BAZ)]
+        (is (= 1.32M conv))
+        (is (contains? new-rates [:FOO :BAZ])))
+      (let [[conv new-rates] (rates/conversion rates :FOO :QUX)]
+        (is (= 1.716M conv))
+        (is (contains? new-rates [:FOO :QUX]))))
+    (testing "derived through inverse rates"
+      (let [[conv new-rates] (rates/conversion rates :FOO :BAT)]
+        (is (= 1.2257142857142857388M conv))
+        (is (contains? new-rates [:FOO :BAT]))))
+    (testing "gives up when impossible"
+      (is (= :no-conversion (c (rates/conversion rates :FOO :BBB)))))))
