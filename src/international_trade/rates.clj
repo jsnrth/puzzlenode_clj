@@ -25,6 +25,14 @@
               (conversion rates from to (merge derived-rates new-rates))
               [:no-conversion all-rates]))))))
 
+(defn convert [rates amount from to]
+  (let [[conversion new-rates] (conversion rates from to)]
+    (cond
+      (and (decimal? conversion))
+        [(bigdec (* amount conversion)) new-rates]
+      :else
+        [:no-conversion new-rates])))
+
 (defn- derive-rates [rates from to]
   (let [inverted-rates (invert-rates rates)
         all-rates (merge rates inverted-rates)
