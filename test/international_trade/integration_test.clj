@@ -1,12 +1,7 @@
 (ns international-trade.integration-test
   (:require [clojure.test :refer :all]
-            [international-trade.transactions :as trans]))
-
-(defn abs [n] (if (< 0 n) (* -1 n) n))
-
-(defn close [n1 n2]
-  (let [p 5 d 0.00001]
-    (< (abs (- (with-precision p n1) (with-precision p n2)))) d))
+            [international-trade.transactions :as trans]
+            [international-trade.test-helper :refer [close]]))
 
 (def rates {[:AUD :CAD] 1.0079M
             [:CAD :USD] 1.0090M

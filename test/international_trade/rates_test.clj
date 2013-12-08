@@ -1,16 +1,11 @@
 (ns international-trade.rates-test
   (:require [clojure.test :refer :all]
-            [international-trade.rates :as rates]))
+            [international-trade.rates :as rates]
+            [international-trade.test-helper :refer [close]]))
 
 (defn c [[conversion rates]] conversion)
 
 (defn a [[amount rates]] amount)
-
-(defn abs [n] (if (< 0 n) (* -1 n) n))
-
-(defn close [n1 n2]
-  (let [p 5 d 0.00001]
-    (< (abs (- (with-precision p n1) (with-precision p n2)))) d))
 
 (deftest returns-a-conversion-rate
   (let [rates {[:FOO :BAR] 1.1M

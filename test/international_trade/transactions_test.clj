@@ -1,16 +1,11 @@
 (ns international-trade.transactions-test
   (:require [clojure.test :refer :all]
-            [international-trade.transactions :as trans]))
+            [international-trade.transactions :as trans]
+            [international-trade.test-helper :refer [close]]))
 
 (def rates {[:FOO :BAR] 1.01M
             [:BAR :BAZ] 0.98M
             [:BAT :QUX] 1.0M})
-
-(defn abs [n] (if (< 0 n) (* -1 n) n))
-
-(defn close [n1 n2]
-  (let [p 5 d 0.00001]
-    (< (abs (- (with-precision p n1) (with-precision p n2)))) d))
 
 (defn stores [transactions]
   (vec (map :store transactions)))
